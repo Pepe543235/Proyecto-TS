@@ -1,18 +1,19 @@
 import { Document, model, Schema, Types } from "mongoose";
-export interface IUser extends Document{
-    name:string;
-    email:string;
-    password:string;
-    role:string;
+
+export interface IUser extends Document {
+    name: string;
+    email: string;
+    password: string;
+    roles: string[]; 
     _id: Types.ObjectId;
-    phone:string;
-    createDate:Date;
-    deleteDate:Date;
-    status:Boolean;
+    phone: string;
+    createDate: Date;
+    deleteDate: Date;
+    status: boolean;
 }
 
-const userSchema= new Schema<IUser>({
-    name:{
+const userSchema = new Schema<IUser>({
+    name: {
         type: String,
         required: true,
         unique: true
@@ -25,6 +26,11 @@ const userSchema= new Schema<IUser>({
     password: {
         type: String,
         required: true,
+    },
+    roles: {
+        type: [String],
+        required: true,
+        default: ['user'] 
     },
     phone: {
         type: String
@@ -39,7 +45,6 @@ const userSchema= new Schema<IUser>({
     status: {
         type: Boolean
     }
-
 });
 
-export const User = model<IUser>('User', userSchema,'user');
+export const User = model<IUser>('User', userSchema, 'user');
