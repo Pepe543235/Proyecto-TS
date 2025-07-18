@@ -1,29 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import Dashboard from "./modulos/dashboard/Dashboard"
-import routes from "./core/menuRoutes"
-import { BrowserRouter as Router, Routes, Route, Link, BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Dashboard from './modulos/dashboard/Dashboard'
+import routes from './core/menuRoutes'
+import { useState } from 'react'
+import AuthRoutes from './auth/AuthRoutes'
+import Login from './modulos/login/login'
+import ProtectedRoute from './auth/ProtectedRoute';
 
 function App() {
   const [count, setCount] = useState(0)
 
-  const handlerClick = () => {
-    setCount((count) => count + 1)
-  }
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />}>
-          {routes.map(route =>
-            <Route key={route.path} path={route.path} element={route.element} />
-          )}
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/"
+          element={
+              <ProtectedRoute allowedRoles={['admin','user']}>
+                <Dashboard />
+              </ProtectedRoute>
+          }
+        >
+
+        <Route 
+          index element={<Dashboard />}        
+        />
+
+        {routes.map(route => (
+            <Route
+              key={route.path}
+              path={route.path}
+              element={route.element}
+            />
+        ))}
+        </Route>
+
+        <Route path="/unauthorized" element={<p>Acceso no autorizado</p>} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

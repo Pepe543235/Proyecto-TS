@@ -1,5 +1,9 @@
 import type { JSX } from "react/jsx-runtime";
 import UserForm from "../modulos/users/UserForm"
+import ProductData from "../modulos/productos/ProductData";
+import OrderData from "../modulos/ordenes/OrderData";
+import Dashboard from "../modulos/dashboard/Dashboard";
+import Login from "../modulos/login/login";
 
 export interface AppRoute {
     path: string;
@@ -11,6 +15,12 @@ export interface AppRoute {
 }
 
 const routes: AppRoute[] = [
+    {
+        path: '/login',
+        element: <Login />,
+        label: 'Login',
+        icon: 'HomeOutlined',
+    },
     {
         path: '/dashboard',
         element: <UserForm />,

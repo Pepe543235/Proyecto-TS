@@ -1,77 +1,90 @@
-import { icons } from 'antd/es/image/PreviewGroup';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu } from 'antd';
-import { DashboardOutlined, UserOutlined,BarChartOutlined } from '@ant-design/icons'
+import { DashboardOutlined, UserOutlined, BarChartOutlined } from '@ant-design/icons';
+import { useAuth } from '../auth/AuthContext';
 
 const icons = {
-    DashboardOutlined,
-    UserOutlined,
-    BarChartOutlined,
+  DashboardOutlined,
+  UserOutlined,
+  BarChartOutlined,
+};
+
+interface MenuItemData {
+  title: string;
+  path: string;
+  icon: keyof typeof icons;
+  roles: string[];
 }
 
 function MenuDynamic() {
-    const[menuItems, setMenuItems] = useState([]);
-    const navigate = useNavigate();
+  const [menuItems, setMenuItems] = useState<MenuItemData[]>([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { roles: userRoles } = useAuth(); 
 
-    const fakeMenuData = [
-        {
-            title: "Dashboard",
-            path: "/dashboard",
-            icon: "DashboardOutlined",
-            roles: ["665a1f2b40fd3a12b3e77611"]
-        },
-        {
-            title: "Usuarios",
-            path: "/users",
-            icon: "UserOutlined",
-            roles: ["665a1f2b40fd3a12b3e77612"]
-        },
-        {
-            title: "Productos",
-            path: "/products",
-            icon: "BarChartOutlined",
-            roles: ["665a1f2b40fd3a12b3e77611", "665a1f2b40fd3a12b3e77612"]
-        },
-        {
-            title: "Ordenes",
-            path: "/orders",
-            icon: "BarChartOutlined",
-            roles: ["665a1f2b40fd3a12b3e77611", "665a1f2b40fd3a12b3e77612"]
-        },
-        {
-            title: "Reportes",
-            path: "/report",
-            icon: "BarChartOutlined",
-            roles: ["665a1f2b40fd3a12b3e77611", "665a1f2b40fd3a12b3e77612"]
-        },
-    ];
+  const fakeMenuData: MenuItemData[] = [
+    {
+      title: "Dashboard",
+      path: "/dashboard",
+      icon: "DashboardOutlined",
+      roles: ["admin", "user"]
+    },
+    {
+      title: "Usuarios",
+      path: "/users",
+      icon: "UserOutlined",
+      roles: ["admin", "user"]
+    },
+    {
+      title: "Productos",
+      path: "/products",
+      icon: "BarChartOutlined",
+      roles: ["admin"]
+    },
+    {
+      title: "Ordenes",
+      path: "/orders",
+      icon: "BarChartOutlined",
+      roles: ["admin"]
+    },
+    {
+      title: "Reportes",
+      path: "/report",
+      icon: "BarChartOutlined",
+      roles: ["admin"]
+    },
+  ];
 
-    useEffect(() => {
-        setTimeout(() => {
-            setMenuItems(fakeMenuData);
-        }, 500);
+  useEffect(() => {
+    const filtered = fakeMenuData.filter(item =>
+      item.roles.some(role => userRoles.includes(role))
+    );
+    setMenuItems(filtered);
+  }, [userRoles]);
+
+  const renderMenu = () => {
+    return menuItems.map((item) => {
+      const IconComponent = icons[item.icon];
+      return {
+        key: item.path,
+        icon: IconComponent ? <IconComponent /> : null,
+        label: item.title,
+      };
     });
+  };
 
-    const renderMenu = () => {
-        return menuItems.map((item: any) => {
-            const IconComponent = icons[item.icon as keyof typeof icons];
-            return {
-                key: item.path,
-                icon: IconComponent ? <IconComponent /> : null,
-                label: item.tittle
-            }
-        })
-    };
-
-    return (
-        <Menu
-            theme='dark'
-            mode='inline'
-            selectedKeys={[location.pathname]}
-            onClick={({ key }) => navigate(key)}
-            items={renderMenu()}
-            style={{ height: '100%', borderRight: 0 }}
-        />
-    )
+  return (
+    <Menu
+      theme='dark'
+      mode='inline'
+      selectedKeys={[location.pathname]}
+      onClick={({ key }) => navigate(key)}
+      items={renderMenu()}
+      style={{ height: '100%', borderRight: 0 }}
+    />
+  );
 }
+
+export default MenuDynamic;
+
