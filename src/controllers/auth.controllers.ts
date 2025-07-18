@@ -7,27 +7,43 @@ import bcrypt from "bcrypt";
 
 declare module 'express' {
     interface Request {
-        userId?: string;
+        userId?: string,
+        roles?: string;
     }
 }
 
 export const login = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+  try {
+    const user = await User.findOne({ email }).populate('roles');
 
     if (!user) {
-        return res.status(401).json({ message: "Credenciales incorrectas" });
+      return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-        return res.status(401).json({ message: "Credenciales incorrectas" });
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(401).json({ message: 'Contraseña incorrecta' });
     }
 
-    const accessToken = generateAccessToken(user.id);
-    cache.set(user.id, accessToken, 60 * 30); 
-    res.json({ accessToken });
+    // Arreglamos aquí el error de roles undefined
+    const roleStrings = Array.isArray(user.roles)
+      ? user.roles
+          .filter((role: any) => role)
+          .map((role: any) =>
+            typeof role === 'object' && role._id ? role._id.toString() : role.toString()
+          )
+      : [];
+
+    const token = generateAccessToken(user._id.toString(), roleStrings);
+
+    res.json({ token });
+
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
 };
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
@@ -96,7 +112,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 export const saveUsers = async (req: Request, res: Response) => {
     try {
-        const { name, email, password, role, phone } = req.body;
+        const { name, email, password, roles, phone } = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -104,7 +120,7 @@ export const saveUsers = async (req: Request, res: Response) => {
             name,
             email,
             password: hashedPassword,
-            role,
+            roles,
             phone,
             createDate: Date.now(),
             status: true
@@ -167,4 +183,19 @@ export const deleteUser = async (req: Request, res: Response) => {
         console.log("Error en deleteUser: ", error);
         return res.status(500).json({ error: 'Error al eliminar usuario' });
     }
+};
+
+export const updateModal = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!updatedUser) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: 'Error actualizando usuario' });
+  }
 };
