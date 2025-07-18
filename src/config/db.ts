@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const connectDB = async (): Promise<void> => {
-    const mongoUrl ="mongodb://admin:admin123@localhost:27017/users?authSource=admin";
+    const mongoUrl ="mongodb+srv://admin:admin@cluster0.dbbqj3l.mongodb.net/";
     try {
         await mongoose.connect(mongoUrl);
         console.log("Conectado a mongo");
